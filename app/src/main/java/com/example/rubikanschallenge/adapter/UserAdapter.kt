@@ -21,6 +21,7 @@ class UserAdapter @Inject constructor(private val ctx:Application) :
     ListAdapter<Users, UserAdapter.UsersViewHolder>(UsersDiffCallback) {
 
     var onItemClick : ((Users) -> Unit)? = null
+    var onButtonClick : ((Users) -> Unit)? = null
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UsersViewHolder =
@@ -41,6 +42,9 @@ class UserAdapter @Inject constructor(private val ctx:Application) :
 
         holder.itemView.setOnClickListener {
             onItemClick!!.invoke(user)
+        }
+        holder.editUser.setOnClickListener {
+            onButtonClick!!.invoke(user)
         }
 
     }

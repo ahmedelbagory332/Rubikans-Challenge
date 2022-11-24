@@ -9,6 +9,8 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.EditorInfo
+import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -29,6 +31,7 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() , SearchView.OnQueryTextListener{
+
     private val viewModel: UserViewModel by viewModels()
     @Inject
     lateinit var userAdapter: UserAdapter
@@ -36,7 +39,7 @@ class MainActivity : AppCompatActivity() , SearchView.OnQueryTextListener{
     lateinit var errorImage: ImageView
     private lateinit var progressBar: ProgressBar
     private var usersList: ArrayList<Users> = ArrayList()
-   // private var user: Users = Users(0,"","","","")
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -51,6 +54,7 @@ class MainActivity : AppCompatActivity() , SearchView.OnQueryTextListener{
 
             if(it.isLoading){
                 progressBar.visibility = View.VISIBLE
+                userAdapter.submitList(emptyList())
             }else if(it.users.isNotEmpty()){
                 userAdapter.submitList(it.users)
                 usersList = it.users as ArrayList<Users>
@@ -73,16 +77,37 @@ class MainActivity : AppCompatActivity() , SearchView.OnQueryTextListener{
                     progressBar.visibility = View.VISIBLE
                     Toast.makeText(this,"fetching user details...",Toast.LENGTH_SHORT).show()
                 }else if(it.user!=null){
-                    showUserDialog(this@MainActivity, it.user)
+                    showUserDialog(it.user)
                     progressBar.visibility = View.GONE
                 }else{
                     progressBar.visibility = View.GONE
-                    showUserDialog(this@MainActivity, userClick)
+                    showUserDialog( userClick)
                     Log.d("bego error",it.error)
                 }
 
             })
         }
+
+        userAdapter.onButtonClick = { userClick ->
+
+            editUserDialog(userClick)
+
+        }
+
+        viewModel.updateUser.observe(this, Observer {
+
+            if(it.isLoading){
+                Toast.makeText(this,"updating user details...",Toast.LENGTH_SHORT).show()
+            }else if(it.updatedAt!=null){
+                Toast.makeText(this,"user updated at ${it.updatedAt}",Toast.LENGTH_SHORT).show()
+                viewModel.getUsers()
+            }else if(it.error.isNotEmpty()){
+                Toast.makeText(this, it.error,Toast.LENGTH_SHORT).show()
+                Log.d("bego error",it.error)
+            }
+
+        })
+
 
 
     }
@@ -110,26 +135,55 @@ class MainActivity : AppCompatActivity() , SearchView.OnQueryTextListener{
         userAdapter.submitList(newList)
         return true
     }
+
+    private fun showUserDialog(user: Users){
+
+        val dialog: Dialog =  Dialog(this)
+        dialog.setContentView(R.layout.show_user_dialog)
+        dialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+        val textViewFirstName: TextView = dialog.findViewById(R.id.tvFirstName)
+        val textViewLastName: TextView = dialog.findViewById(R.id.tvLastName)
+        val textViewEmail: TextView = dialog.findViewById(R.id.tvEmail)
+        val userProfilePhoto: ImageView = dialog.findViewById(R.id.imageView)
+
+        Glide.with(this)
+            .load(user.avatar)
+            .into(userProfilePhoto)
+
+        textViewFirstName.text = user.firstName
+        textViewLastName.text = user.lastName
+        textViewEmail.text = user.email
+
+        dialog.show()
+    }
+
+    private fun editUserDialog(user: Users){
+
+        val dialog: Dialog =  Dialog(this)
+        dialog.setContentView(R.layout.edit_user_dialog)
+        dialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+        val userName: EditText = dialog.findViewById(R.id.etName)
+        val editUserName: Button = dialog.findViewById(R.id.editName)
+
+
+            editUserName.setOnClickListener {
+                if (userName.text.isNotEmpty()){
+                    viewModel.updateUser(user.id, userName.text.toString())
+
+                }else{
+                    Toast.makeText(this,"Enter name to update the user",Toast.LENGTH_SHORT).show()
+                }
+
+                dialog.cancel()
+
+            }
+
+
+
+
+        dialog.show()
+    }
 }
 
-fun showUserDialog(ctx: MainActivity, user: Users){
-
-    val dialog: Dialog =  Dialog(ctx)
-    dialog.setContentView(R.layout.show_user_dialog)
-    dialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-
-    val textViewFirstName: TextView = dialog.findViewById(R.id.tvFirstName)
-    val textViewLastName: TextView = dialog.findViewById(R.id.tvLastName)
-    val textViewEmail: TextView = dialog.findViewById(R.id.tvEmail)
-    val userProfilePhoto: ImageView = dialog.findViewById(R.id.imageView)
-
-    Glide.with(ctx)
-        .load(user.avatar)
-        .into(userProfilePhoto)
-
-    textViewFirstName.text = user.firstName
-    textViewLastName.text = user.lastName
-    textViewEmail.text = user.email
-
-    dialog.show()
-}

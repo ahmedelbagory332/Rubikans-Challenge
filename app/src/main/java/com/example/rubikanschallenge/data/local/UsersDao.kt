@@ -19,4 +19,7 @@ interface UsersDao {
 
     @Query("DELETE FROM users")
     suspend fun deleteAllUsers()
+
+    @Query("UPDATE users SET firstName = :name  WHERE id =:id")
+    suspend fun updateUser(id: Long , name:String)
 }

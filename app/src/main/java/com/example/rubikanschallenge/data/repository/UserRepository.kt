@@ -1,9 +1,11 @@
 package com.example.rubikanschallenge.data.repository
 
+import android.util.Log
 import androidx.room.withTransaction
 import com.example.rubikanschallenge.data.local.UsersDataBase
 import com.example.rubikanschallenge.utils.Resource
 import com.example.rubikanschallenge.data.network.UserApi
+import com.example.rubikanschallenge.model.UpdateModel
 import com.example.rubikanschallenge.model.UserModel
 import com.example.rubikanschallenge.model.Users
 import kotlinx.coroutines.flow.Flow
@@ -28,9 +30,6 @@ class UserRepository @Inject constructor(private val userApi: UserApi,private va
                  emit(Resource.Success<List<Users>>(users))
              }
 
-         }finally {
-             emit(Resource.Error<List<Users>>("An unexpected error happened"))
-
          }
     }
 
@@ -41,6 +40,18 @@ class UserRepository @Inject constructor(private val userApi: UserApi,private va
 
         }catch (e:Exception){
             emit(Resource.Error<UserModel>("An unexpected error happened"))
+        }
+    }
+
+    fun updateUser(id: Long , name:String): Flow<Resource<UpdateModel>> = flow {
+        try {
+            emit(Resource.Loading<UpdateModel>())
+            emit(Resource.Success<UpdateModel>(userApi.updateUser(id,name)))
+
+        }catch (e:Exception){
+            Log.d("bego", e.localizedMessage!!)
+            usersDataBase.usersDao().updateUser(id,name)
+            emit(Resource.Error<UpdateModel>("Data Updated Locally due to server connection error"))
         }
     }
 

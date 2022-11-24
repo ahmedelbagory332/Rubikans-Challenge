@@ -13,3 +13,9 @@ data class UserStats (
     val user: Users? = null,
     val error: String = ""
 )
+
+data class UpdateStats (
+    val isLoading: Boolean = false,
+    val updatedAt: String? = null,
+    val error: String = ""
+)
