@@ -1,5 +1,6 @@
 package com.example.rubikanschallenge.ui
 
+import android.annotation.SuppressLint
 import android.app.Dialog
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -158,6 +159,7 @@ class MainActivity : AppCompatActivity() , SearchView.OnQueryTextListener{
         dialog.show()
     }
 
+    @SuppressLint("SuspiciousIndentation")
     private fun editUserDialog(user: Users){
 
         val dialog: Dialog =  Dialog(this)
